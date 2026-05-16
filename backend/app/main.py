@@ -4,7 +4,7 @@ import os
 from dotenv import load_dotenv
 from typing import Optional
 
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, BackgroundTasks, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
@@ -63,9 +63,10 @@ def health_check():
 
 
 @app.post("/api/leads")
-def create_lead(lead: LeadCreate):
+def create_lead(lead: LeadCreate, background_tasks: BackgroundTasks):
     """
-    Receives a quote request and saves it to the SQLite database.
+    Receives a quote request and saves it to the database.
+    The email notification is sent in the background so the form can respond faster.
     """
 
     try:
@@ -98,7 +99,9 @@ def create_lead(lead: LeadCreate):
 
             conn.commit()
 
-        email_sent = send_lead_notification(lead_id, lead)
+        # Send email after the response is returned to the user.
+        # This prevents the form from getting stuck on "Submitting..."
+        background_tasks.add_task(send_lead_notification, lead_id, lead)
 
         return {
             "ok": True,

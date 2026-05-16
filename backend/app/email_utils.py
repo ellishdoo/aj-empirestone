@@ -17,6 +17,7 @@ def send_lead_notification(lead_id: int, lead) -> bool:
     smtp_password = os.getenv("SMTP_PASSWORD")
     notify_to_email = os.getenv("NOTIFY_TO_EMAIL")
     from_email = os.getenv("FROM_EMAIL", smtp_username)
+    admin_leads_url = os.getenv("ADMIN_LEADS_URL", "Not configured")
 
     if not all([smtp_host, smtp_username, smtp_password, notify_to_email, from_email]):
         print("Email notification skipped: missing SMTP settings.")
@@ -40,7 +41,7 @@ Project Details
 {lead.message or "No additional details provided."}
 
 Admin View:
-http://127.0.0.1:8000/api/leads
+{admin_leads_url}
 """
 
     message = EmailMessage()
